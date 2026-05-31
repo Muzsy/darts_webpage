@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: darts_webpage_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: darts_user
+      POSTGRES_PASSWORD: darts_password
+      POSTGRES_DB: darts_webpage
+    ports:
+      - "5432:5432"
+    volumes:
+      - darts_webpage_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U darts_user -d darts_webpage"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  darts_webpage_postgres_data:

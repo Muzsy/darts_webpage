@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ScoreCategory {
+  NORMAL
+  CHECKOUT_POSSIBLE
+  BOGEY
+  TERMINAL
+  BUST_LIKE
+}
+
+enum StrategyType {
+  SCORING
+  SETUP
+  CHECKOUT
+  RECOVERY
+  PRACTICE
+}
+
+enum StrategyStyle {
+  AGGRESSIVE
+  SAFE
+  BALANCED
+  BEGINNER_FRIENDLY
+  PRO
+  ALTERNATIVE
+}
+
+enum Multiplier {
+  S
+  D
+  T
+  SBULL
+  BULL
+}
+
+enum ResultType {
+  CHECKOUT
+  NEXT_SCORE
+  SETUP
+  BUST
+  NO_SCORE
+  INVALID
+}
+
+model Score {
+  score      Int           @id
+  category   ScoreCategory
+  title      String?
+  note       String?
+
+  strategies   Strategy[]
+  nextOutcomes StrategyOutcome[] @relation("OutcomeNextScore")
+
+  @@map("scores")
+}
+
+model Strategy {
+  id           String        @id @default(uuid()) @db.Uuid
+  startScore   Int
+  name         String
+  priority     Int           @default(1)
+  strategyType StrategyType
+  skillLevel   String?
+  style        StrategyStyle?
+  description  String?
+  isPublished Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  score    Score             @relation(fields: [startScore], references: [score])
+  darts    StrategyDart[]
+  outcomes StrategyOutcome[]
+
+  @@index([startScore, priority])
+  @@map("strategies")
+}
+
+model StrategyDart {
+  id         String     @id @default(uuid()) @db.Uuid
+  strategyId String     @db.Uuid
+  dartIndex  Int
+  target     String
+  multiplier Multiplier
+  segment    String
+  points     Int
+  isOptional Boolean    @default(false)
+
+  strategy Strategy @relation(fields: [strategyId], references: [id], onDelete: Cascade)
+
+  @@unique([strategyId, dartIndex])
+  @@index([strategyId])
+  @@map("strategy_darts")
+}
+
+model StrategyOutcome {
+  id           String     @id @default(uuid()) @db.Uuid
+  strategyId   String     @db.Uuid
+  label        String
+  scoredPoints Int
+  resultScore  Int
+  resultType   ResultType
+  nextScore    Int?
+  explanation  String?
+
+  strategy     Strategy @relation(fields: [strategyId], references: [id], onDelete: Cascade)
+  nextScoreRef Score?   @relation("OutcomeNextScore", fields: [nextScore], references: [score])
+
+  @@index([strategyId])
+  @@index([nextScore])
+  @@map("strategy_outcomes")
+}

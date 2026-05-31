@@ -1,25 +1,63 @@
 # darts_webpage
 
-Darts stratégia/kiszállótábla webalkalmazás.
+Darts score-stratégia és kiszállótábla webalkalmazás.
 
 ## Aktuális scope
 
-Az első fejlesztési kör szándékosan szűk:
+Az első verzió szándékosan csak erre fókuszál:
 
-- egyetlen stratégia képernyő,
-- kiszálló/score stratégiai táblák megjelenítése,
-- PostgreSQL alapú adatstruktúra,
-- score-okhoz tartozó több stratégiai verzió,
-- háromnyilas dobássorok,
-- outcome-ok és más score-okhoz kapcsolódó útvonalak.
+- egyetlen stratégia/kiszállótábla képernyő,
+- PostgreSQL adatbázis,
+- Prisma adatmodell,
+- score-ok 0–501 között,
+- score-hoz tartozó stratégiai verziók,
+- maximum háromnyilas tervezett dobássorok,
+- outcome-ok és más score-okhoz kapcsolódó navigáció.
 
-Az első körben NEM része a scope-nak:
+Most még nincs:
 
 - gyakorló képernyő,
-- felhasználói statisztika,
-- teljes profilrendszer,
-- gamification,
-- mobilapp,
-- AI-ajánló.
+- auth,
+- user profil,
+- statisztika,
+- admin szerkesztő.
 
-Az adatmodellt úgy kell kialakítani, hogy ezek később hozzáadhatók legyenek.
+## Technológia
+
+- Next.js
+- React
+- TypeScript
+- PostgreSQL
+- Prisma
+- Docker Compose
+
+## Első indítás
+
+```bash
+cp .env.example .env
+docker compose up -d postgres
+npm install
+npm run db:migrate -- --name init_score_strategy_model
+npm run db:seed
+npm run dev
+```
+
+Böngészőben:
+
+```text
+http://localhost:3000
+```
+
+Minta score:
+
+```text
+http://localhost:3000/?score=108
+```
+
+## Hasznos parancsok
+
+```bash
+npm run db:studio
+npm run db:generate
+npm run build
+```
