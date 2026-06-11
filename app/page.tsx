@@ -1,14 +1,11 @@
-import { ScoreToolbar } from "@/components/strategy-screen/ScoreToolbar";
-import { StrategyCard } from "@/components/strategy-screen/StrategyCard";
+import { ScoreSlider } from "@/components/strategy-screen/ScoreSlider";
+import { StrategyRubric } from "@/components/strategy-screen/StrategyRubric";
+import { HistoryBreadcrumb } from "@/components/strategy-screen/HistoryBreadcrumb";
 import { getStrategyScreenData } from "@/lib/darts/strategy-service";
 
 type PageProps = {
-  searchParams?: Promise<{ score?: string }> | { score?: string };
+  searchParams: Promise<{ score?: string; h?: string }>;
 };
-
-async function resolveSearchParams(searchParams: PageProps["searchParams"]) {
-  return searchParams instanceof Promise ? await searchParams : searchParams;
-}
 
 function parseScore(value: string | undefined) {
   const parsed = Number(value ?? "108");
@@ -16,9 +13,19 @@ function parseScore(value: string | undefined) {
   return parsed;
 }
 
+function parseHistory(value: string | undefined): number[] {
+  if (!value) return [];
+  return value
+    .split(",")
+    .map((s) => Number(s.trim()))
+    .filter((n) => Number.isInteger(n) && n >= 0 && n <= 501)
+    .slice(0, 10);
+}
+
 export default async function Home({ searchParams }: PageProps) {
-  const params = await resolveSearchParams(searchParams);
+  const params = await searchParams;
   const currentScore = parseScore(params?.score);
+  const history = parseHistory(params?.h);
   const data = await getStrategyScreenData(currentScore);
 
   return (
@@ -26,51 +33,51 @@ export default async function Home({ searchParams }: PageProps) {
       <div className="container">
         <header className="header">
           <div>
-            <span className="badge">Darts stratégia / kiszállótábla</span>
-            <h1>Score-alapú stratégia képernyő</h1>
+            <span className="badge">Darts kiszálló-stratégia</span>
+            <h1>Kiszálló képernyő</h1>
             <p>
-              Az első verzió egyetlen képernyő: score kiválasztása, stratégiai verziók, tervezett dobások és outcome-alapú navigáció más score-okra.
+              Húzd a sávot a kívánt score-hoz, vagy kattints a számokra. A kiemelt rublika a
+              legjobb megoldás, a többi alternatív. A lenyíló panelek a szektorcseréket és a
+              mentőágakat mutatják.
             </p>
-          </div>
-          <div className="score-hero">
-            <strong>{currentScore}</strong>
-            <span>{data?.category ?? "nincs adat"}</span>
           </div>
         </header>
 
-        <ScoreToolbar currentScore={currentScore} />
+        <HistoryBreadcrumb history={history} currentScore={currentScore} />
 
-        <section className="main-grid">
-          <div className="cards">
-            {!data ? (
-              <div className="empty">
-                <h2 className="error">A score nem található az adatbázisban.</h2>
-                <p>Futtasd a migrációt és a seed scriptet.</p>
-              </div>
-            ) : data.strategies.length === 0 ? (
-              <div className="empty">
-                <h2>Ehhez a score-hoz még nincs publikált stratégia.</h2>
-                <p>A score létezik az adatbázisban, de stratégiai adat még nincs feltöltve.</p>
-              </div>
-            ) : (
-              data.strategies.map((strategy) => <StrategyCard key={strategy.id} strategy={strategy} />)
-            )}
-          </div>
+        <ScoreSlider currentScore={currentScore} history={history} />
 
-          <aside className="sidebar">
-            <div className="side-card">
-              <h3>Aktuális scope</h3>
-              <p>Most csak ez az egy stratégia képernyő és az adatbázis készül. Nincs gyakorló mód, nincs auth, nincs statisztika.</p>
+        <section className="rubrics">
+          {!data ? (
+            <div className="empty">
+              <h2 className="error">A score nem található az adatbázisban.</h2>
+              <p>Futtasd a migrációt és a seed scriptet.</p>
             </div>
-            <div className="side-card">
-              <h3>Adatmodell</h3>
-              <p>scores → strategies → strategy_darts / strategy_outcomes. Az outcome next_score mezővel kapcsolódhat más score-hoz.</p>
+          ) : data.strategies.length === 0 ? (
+            <div className="empty">
+              <h2>Ehhez a score-hoz nincs kiszálló.</h2>
+              <p>
+                A {currentScore} egy bogey szám vagy nincs 3-nyilas megoldása.
+              </p>
             </div>
-            <div className="side-card">
-              <h3>Kezdő mintaadat</h3>
-              <p>A seed jelenleg 0–501 score-t, valamint 108, 40 és 32 stratégiai mintákat tölt be.</p>
-            </div>
-          </aside>
+          ) : (
+            data.strategies.map((strategy, idx) => (
+              <StrategyRubric
+                key={strategy.id}
+                index={idx + 1}
+                strategyId={strategy.id}
+                name={strategy.name}
+                style={strategy.style}
+                description={strategy.description}
+                darts={strategy.darts}
+                outcomes={strategy.outcomes}
+                targetScore={currentScore}
+                isPrimary={idx === 0}
+                history={history}
+                forceOpen={idx === 0}
+              />
+            ))
+          )}
         </section>
       </div>
     </main>

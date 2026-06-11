@@ -14,3 +14,7 @@ pnpm-debug.log*
 .vscode/*
 !.vscode/extensions.json
 coverage/
+
+# Local artifacts
+*.zip
+darts_webpage_next_prisma_starter.zip
