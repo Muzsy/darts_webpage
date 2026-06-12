@@ -3,6 +3,11 @@ node_modules/
 out/
 dist/
 build/
+
+# Python bytecode cache (a webhook.py py_compile után keletkezik)
+__pycache__/
+*.py[cod]
+*$py.class
 .env
 .env.local
 .env.*.local
