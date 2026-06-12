@@ -38,7 +38,7 @@ services:
     environment:
       # A belső Docker hálózaton a postgres service nevét használjuk
       # Ha a .env-ben más van felülírva, az a .env_file-on keresztül jön
-      DATABASE_URL: postgresql://darts_user:darts_password@postgres:5432/darts_webpage?schema=public
+      DATABASE_URL: postgresql://darts_user:***@postgres:5432/darts_webpage?schema=public
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: "1"
     env_file:
@@ -52,7 +52,22 @@ services:
       # A seed/migráció miatt a prisma mappát és a node_modules Prisma clientjét
       # használja a konténer (a Dockerfile-ban másolva van)
       - ./prisma:/app/prisma:ro
+    networks:
+      # Alapértelmezett darts_webpage_default: a postgres-t innen éri el
+      # ghost_default (külső): a ghost Caddy konténere innen éri el a next-app-ot
+      # a darts.smartflowdigest.com vhost reverse_proxy-ján keresztül
+      - default
+      - ghost_default
 
 volumes:
   darts_webpage_postgres_data:
     name: darts_webpage_postgres_data
+
+networks:
+  # A ghost_default egy KÜLSŐ hálózat: a ghost compose hozza létre és kezeli.
+  # A next-app service-t ehhez a hálózathoz is csatlakoztatjuk, hogy a ghost
+  # Caddy konténere el tudja érni a next-app:3000-et a reverse_proxy-n keresztül.
+  # A network name itt egyezik a ghost compose project nevéből képzettel.
+  ghost_default:
+    name: ghost_default
+    external: true
