@@ -1,3 +1,11 @@
+# Docker Compose a darts_webpage production stack-hez
+# Használat:
+#   Első indítás: docker compose up -d --build
+#   Migráció:     docker compose exec next-app npx prisma migrate deploy
+#   Seed:         docker compose exec next-app npm run db:seed
+#
+# A .env fájl szükséges (DATABASE_URL). Lásd: .env.example
+
 services:
   postgres:
     image: postgres:16
@@ -7,8 +15,9 @@ services:
       POSTGRES_USER: darts_user
       POSTGRES_PASSWORD: darts_password
       POSTGRES_DB: darts_webpage
-    ports:
-      - "5433:5432"
+    # Nincs host-port publish: csak a next-app éri el belső hálózatról
+    # Ha helyi fejlesztésnél közvetlenül akarod elérni a postgres-t (pl. pgAdmin),
+    # vedd fel a ports: ["5433:5432"] sort, és a .env-ben localhost:5433-at használj.
     volumes:
       - darts_webpage_postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -17,5 +26,33 @@ services:
       timeout: 5s
       retries: 10
 
+  next-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: darts_webpage_next
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # A belső Docker hálózaton a postgres service nevét használjuk
+      # Ha a .env-ben más van felülírva, az a .env_file-on keresztül jön
+      DATABASE_URL: postgresql://darts_user:darts_password@postgres:5432/darts_webpage?schema=public
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
+    env_file:
+      - .env
+    ports:
+      # A Caddy reverse proxy a Docker belső hálózatról éri el: next-app:3000
+      # A hostra is publisholjuk, hogy helyi fejlesztésnél böngészőből tesztelhető
+      # legyen a http://localhost:3000
+      - "3000:3000"
+    volumes:
+      # A seed/migráció miatt a prisma mappát és a node_modules Prisma clientjét
+      # használja a konténer (a Dockerfile-ban másolva van)
+      - ./prisma:/app/prisma:ro
+
 volumes:
   darts_webpage_postgres_data:
+    name: darts_webpage_postgres_data

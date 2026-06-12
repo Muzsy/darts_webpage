@@ -1,0 +1,48 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build output
+.next
+out
+dist
+build
+
+# Local env files
+.env
+.env.local
+.env.*.local
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.swp
+*.swo
+
+# Test / coverage
+coverage
+*.log
+
+# Local artifacts (a projekt bootstrap zip-eket sem akarjuk a build context-be)
+*.zip
+basic_docs.zip
+darts_webpage_next_prisma_starter.zip
+darts_webpage_project_bootstrap_docs.zip
+
+# Documentation (a buildhöz nem kell)
+app_docs
+basic_docs
+README.md
+
+# Prisma lokál migration cache
+prisma/.cache
