@@ -40,6 +40,9 @@ export default async function Home({ searchParams }: PageProps) {
               legjobb megoldás, a többi alternatív. A lenyíló panelek a szektorcseréket és a
               mentőágakat mutatják.
             </p>
+            <p className="build-timestamp" style={{ fontSize: "0.85em", opacity: 0.6, marginTop: "0.5em" }}>
+              Webhook deploy teszt — utolsó build: {new Date().toISOString()}
+            </p>
           </div>
         </header>
 
