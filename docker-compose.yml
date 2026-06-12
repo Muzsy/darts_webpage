@@ -15,6 +15,15 @@ services:
       POSTGRES_USER: darts_user
       POSTGRES_PASSWORD: darts_password
       POSTGRES_DB: darts_webpage
+      # A postgres 16 alapértelmezetten scram-sha-256-ot használ, amit a
+      # Prisma 6 + pg driver 8.x a konténerhálózaton nem tud megbízhatóan kezelni
+      # (P1000 Authentication failed). A trust megoldás: a postgres csak a saját
+      # Docker belső hálózatán (172.20.0.0/16) hallgat, és nincs host-port
+      # publish, így kívülről nem elérhető — a trust itt biztonságos.
+      # A pg_hba.conf-ot a postgres image a POSTGRES_HOST_AUTH_METHOD-ból generálja
+      # az ELSŐ indításkor, és a volume-on tárolja. Ha a volume-ot töröljük, a
+      # trust beállítás újra érvényesül.
+      POSTGRES_HOST_AUTH_METHOD: trust
     # Nincs host-port publish: csak a next-app éri el belső hálózatról
     # Ha helyi fejlesztésnél közvetlenül akarod elérni a postgres-t (pl. pgAdmin),
     # vedd fel a ports: ["5433:5432"] sort, és a .env-ben localhost:5433-at használj.
